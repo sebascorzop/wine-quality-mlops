@@ -1,0 +1,30 @@
+# Configuration for ML Pipeline
+data:
+  url: "https://raw.githubusercontent.com/datasciencedojo/datasets/master/WineQT.csv"
+  raw_path: "data/winequality-red.csv"
+  test_size: 0.2
+  random_state: 42
+
+model:
+  type: "random_forest"
+  params:
+    n_estimators: 100
+    max_depth: 10
+    min_samples_split: 2
+    min_samples_leaf: 1
+    random_state: 42
+
+preprocessing:
+  scale_features: true
+  handle_missing: "mean"
+
+mlflow:
+  experiment_name: "wine_quality_prediction"
+  tracking_uri: "file:./mlruns"
+  
+evaluation:
+  metrics:
+    - "accuracy"
+    - "f1_score"
+    - "precision"
+    - "recall"
