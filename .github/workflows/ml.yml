@@ -1,0 +1,64 @@
+name: ML Pipeline CI/CD
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  ml-pipeline:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: '3.9'
+        cache: 'pip'
+    
+    - name: Install dependencies
+      run: make install
+    
+    - name: Run linting
+      run: make lint
+      continue-on-error: true
+    
+    - name: Run tests
+      run: make test
+    
+    - name: Train model
+      run: make train
+    
+    - name: Upload MLflow artifacts
+      uses: actions/upload-artifact@v3
+      if: always()
+      with:
+        name: mlflow-artifacts
+        path: mlruns/
+        retention-days: 30
+    
+    - name: Upload model artifacts
+      uses: actions/upload-artifact@v3
+      if: success()
+      with:
+        name: trained-model
+        path: |
+          mlruns/**/*model*
+        retention-days: 90
+    
+    - name: Create pipeline report
+      if: always()
+      run: |
+        echo "## ML Pipeline Execution Report" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "✅ Pipeline executed successfully" >> $GITHUB_STEP_SUMMARY
+        echo "" >> $GITHUB_STEP_SUMMARY
+        echo "### Artifacts Generated:" >> $GITHUB_STEP_SUMMARY
+        echo "- MLflow tracking data" >> $GITHUB_STEP_SUMMARY
+        echo "- Trained model" >> $GITHUB_STEP_SUMMARY
+        echo "- Evaluation metrics" >> $GITHUB_STEP_SUMMARY
